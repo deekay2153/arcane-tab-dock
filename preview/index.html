@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arcane Tab Dock preview</title>
+<style>body{margin:0;background:linear-gradient(160deg,#0c1422,#1b2233 60%,#2a2233);min-height:100vh;font-family:system-ui;color:#fff;--primary-color:#03a9f4;--header-height:56px}</style>
+<!-- A stand-in for Home Assistant's header, with the same nesting, part names and
+     stock styles (frontend 20260930.5), so tab-dock.js runs here unchanged. -->
+<home-assistant></home-assistant>
+<script type="module">
+const P = ['M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z','M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z','M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7Z','M15,13V5A3,3 0 0,0 9,5V13A5,5 0 1,0 15,13M12,4A1,1 0 0,1 13,5V8H11V5A1,1 0 0,1 12,4Z','M3,4H21V8H19V20H17V8H7V20H5V8H3V4Z','M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z','M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z','M12,3L2,12H5V20H19V12H22L12,3Z'];
+const ICON = (i) => `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="${P[i % P.length]}"/></svg>`;
+const sh = (el, html) => { const s = el.attachShadow({ mode: 'open' }); s.innerHTML = html; return s; };
+const n = +(new URLSearchParams(location.search).get('n') || 6), act = +(new URLSearchParams(location.search).get('a') || 0);
+const ha = document.querySelector('home-assistant');
+const main = sh(ha, '<home-assistant-main></home-assistant-main>').firstChild;
+const pl = sh(main, '<ha-panel-lovelace></ha-panel-lovelace>').firstChild;
+const hui = sh(pl, '<hui-root></hui-root>').firstChild;
+const r = sh(hui, `<style>
+.header{color:#fff;position:fixed;top:0;width:100%;z-index:4}
+.toolbar{height:var(--header-height);display:flex;align-items:center;padding:0 4px;box-sizing:border-box;width:100%}
+.btn,ha-menu-button{width:48px;height:48px;flex:none;display:grid;place-items:center}
+.action-items{white-space:nowrap;display:flex;align-items:center}
+ha-tab-group{--ha-tab-indicator-color:#fff;align-self:flex-end;flex-grow:1;min-width:0;height:100%;display:block}
+ha-tab-group-tab{--ha-tab-group-tab-height:var(--header-height,56px);height:var(--ha-tab-group-tab-height)}
+ha-tab-group-tab::part(base){padding-inline-start:16px;padding-inline-end:16px;padding-top:calc((var(--ha-tab-group-tab-height) - 20px)/2)}
+ha-tab-group-tab.icon-only::part(base){padding-top:calc((var(--ha-tab-group-tab-height) - 20px)/2 - 2px);padding-bottom:calc((var(--ha-tab-group-tab-height) - 20px)/2 - 4px)}
+.hide-tab{display:none}
+</style><div class="narrow"><div class="header"><div class="toolbar"><ha-menu-button>☰</ha-menu-button>
+<ha-tab-group>${Array.from({ length: n + 1 }, (_, i) => `<ha-tab-group-tab slot="nav" class="icon-only${i === n ? ' hide-tab' : ''}"${i === act ? ' active' : ''}>${ICON(i)}</ha-tab-group-tab>`).join('')}</ha-tab-group>
+<div class="action-items"><div class="btn">⋮</div></div></div></div></div>`);
+const tg = r.querySelector('ha-tab-group');
+const q = new URLSearchParams(location.search); if (q.get('hide')) hui.style.setProperty('--tab-dock-hide-buttons', q.get('hide')); if (q.get('accent')) hui.style.setProperty('--tab-dock-accent', q.get('accent'));
+sh(tg, `<style>:host{--track-width:2px;--indicator-color:var(--ha-tab-indicator-color)}
+.tab-group{display:flex;flex-direction:column}.nav{display:flex;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;position:relative;flex:1 1 auto;flex-direction:row;border-bottom:solid 2px transparent}
+::slotted(ha-tab-group-tab[active]){border-block-end:solid var(--track-width) var(--indicator-color);margin-block-end:calc(-1 * var(--track-width))}
+</style><div part="base" class="tab-group tab-group-top"><div class="nav-container" part="nav"><div class="nav"><div part="tabs" class="tabs"><slot name="nav"></slot></div></div></div></div>`);
+r.querySelectorAll('ha-tab-group-tab').forEach(t => { sh(t, `<style>:host{display:inline-block;opacity:.8;font-size:14px}:host([active]){opacity:1}.tab{display:inline-flex;align-items:center;padding:1em 1.5em;white-space:nowrap;cursor:pointer}</style><div part="base" class="tab"><slot></slot></div>`);
+  t.addEventListener('click', () => { r.querySelectorAll('ha-tab-group-tab').forEach(x => x.removeAttribute('active')); t.setAttribute('active', ''); }); });
+if (!new URLSearchParams(location.search).has('stock')) await import('../dist/arcane-tab-dock.js');
+window.__m = () => { const nav = tg.shadowRoot.querySelector('.nav'); return { scroll: nav.scrollWidth, client: nav.clientWidth, tabs: [...r.querySelectorAll('ha-tab-group-tab:not(.hide-tab)')].map(t => Math.round(t.getBoundingClientRect().width)) }; };
+</script>
