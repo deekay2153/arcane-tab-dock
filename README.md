@@ -54,6 +54,18 @@ my_theme:
 
 The back arrow on subviews always stays.
 
+### Without editing a theme
+
+If your theme comes from HACS (an update would undo your changes) or different devices use different themes, put the settings in a small style sheet instead. Create `config/www/tab-dock.css`:
+
+```css
+:root {
+  --tab-dock-hide-buttons: touch;
+}
+```
+
+and add `/local/tab-dock.css` in **Settings → Dashboards → ⋮ → Resources** as a **Stylesheet**. It works for every theme.
+
 ## Good to know
 
 - Home Assistant has no setting for the tab bar, so the dock adds a small style sheet to the dashboard header. If a Home Assistant update renames the parts it styles, the tab bar simply goes back to the normal look until the dock is updated.
